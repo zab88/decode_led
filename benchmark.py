@@ -10,10 +10,24 @@ test_images = [
     ('04.jpg', [1,1,0,1,1,0,0,1])
 ]
 
+print 'Slow algorithm'
 for test_image in test_images:
     image_original = cv2.imread('img_in'+os.sep+test_image[0])
     led = ll.Led(image_original)
     counted_array = led.getCode()
+    if cmp(counted_array, test_image[1]) != 0:
+        print 'Error in decoding {}:'.format(test_image[0])
+        print 'correct:', test_image[1]
+        print 'counted:', counted_array
+    else:
+        print test_image[0] + ' is correct!'
+
+
+# test fast method
+print '\nFast algorithm'
+for test_image in test_images:
+    img_gray = cv2.imread('img_in'+os.sep+test_image[0], 0)
+    counted_array = ll.Led.getCodeFast(img_gray)
     if cmp(counted_array, test_image[1]) != 0:
         print 'Error in decoding {}:'.format(test_image[0])
         print 'correct:', test_image[1]

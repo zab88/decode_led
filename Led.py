@@ -55,3 +55,53 @@ class Led:
                 else:
                     res.append(0)
         return res
+
+    @staticmethod
+    def getCodeFast(img_gray):
+        win_w = 3
+        l3_thres = win_w*50
+
+        img_thres_1 = cv2.threshold(img_gray, 40, 255, cv2.THRESH_BINARY)[1]
+        img_thres_2 = cv2.threshold(img_gray, 225, 255, cv2.THRESH_BINARY)[1]
+        # img_thres_127 = cv2.threshold(img_gray, 127, 255, cv2.THRESH_BINARY)[1]
+        separators_bin = np.bitwise_xor(img_thres_1, img_thres_2)
+
+        rows_sum = separators_bin.sum(axis=0)
+
+        # ss = cv2.subtract(img_thres_1, separators_bin)
+        # ss2 = cv2.subtract(255-img_thres_2, separators_bin)
+        # cv2.imshow('white', ss)
+        # cv2.imshow('black', ss2)
+        # cv2.imshow('ser', separators_bin)
+        # cv2.waitKey()
+        # exit()
+
+        # left and right border of eclipse
+        start_x = next(k for k, v in enumerate(rows_sum) if v > 0)
+        # end_x = len(rows_sum) - next(k for k, v in enumerate(rows_sum[::-1]) if v > 0)
+
+        res = []
+        cur_sum = 0
+        zero = 0
+        for x, val in enumerate(rows_sum):
+            if x <= start_x:
+                continue
+            # num = cv2.countNonZero(img_gray[:, x:x+1])
+            num = np.count_nonzero(separators_bin[:, x:x+win_w])
+            # continue on separator
+            if num < l3_thres:
+                cur_sum = 0
+                continue
+            get_color = np.count_nonzero(img_thres_2[:, x:x+win_w])
+            if get_color > zero and cur_sum==0:
+                # white
+                # print 'white', num, get_color
+                res.append(1)
+                cur_sum += 1
+            elif get_color <= zero and cur_sum==0:
+                # black
+                # print 'black', num, get_color
+                res.append(0)
+                cur_sum += 1
+
+        return res
