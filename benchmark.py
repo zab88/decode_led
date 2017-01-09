@@ -2,6 +2,7 @@ import os
 import cv2
 import numpy as np
 import Led as ll
+import time
 
 test_images = [
     ('01.jpg', [1,1,1,0,1,1,0,0,1,1,1,0,1,1,0,0,1,1,1,0,1,1,0,0,1,1,1,0,1,1,0,0,1,1,1,0,1,1,0,0]),
@@ -10,6 +11,7 @@ test_images = [
     ('04.jpg', [1,1,0,1,1,0,0,1])
 ]
 
+start_time = time.time()
 print 'Slow algorithm'
 for test_image in test_images:
     image_original = cv2.imread('img_in'+os.sep+test_image[0])
@@ -21,9 +23,11 @@ for test_image in test_images:
         print 'counted:', counted_array
     else:
         print test_image[0] + ' is correct!'
+print("--- %s seconds ---" % (time.time() - start_time))
 
 
 # test fast method
+start_time = time.time()
 print '\nFast algorithm'
 for test_image in test_images:
     img_gray = cv2.imread('img_in'+os.sep+test_image[0], 0)
@@ -34,3 +38,4 @@ for test_image in test_images:
         print 'counted:', counted_array
     else:
         print test_image[0] + ' is correct!'
+print("--- %s seconds ---" % (time.time() - start_time))
