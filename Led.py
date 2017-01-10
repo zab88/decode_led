@@ -56,6 +56,47 @@ class Led:
                     res.append(0)
         return res
 
+    def getLedContour(self):
+        self.img_thres_200 = cv2.threshold(self.img_gray, 180, 255, cv2.THRESH_BINARY)[1]
+        contours, _ = cv2.findContours(self.img_thres_200, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        left_x, right_x = self.img_thres_200.shape[1], 0
+        left_y, right_y = None, None
+        for cnt in contours:
+            approx = cv2.approxPolyDP(cnt, 0.001 * cv2.arcLength(cnt, True), True)
+            approx_area = cv2.contourArea(approx)
+            # deleting too small blobs
+            if approx_area < 20:
+                continue
+            x_cnt, y_cnt, w_cnt, h_cnt = cv2.boundingRect(cnt)
+            if x_cnt < left_x:
+                left_x = x_cnt
+                left_y = y_cnt + h_cnt/2
+            if x_cnt + w_cnt > right_x:
+                right_x = x_cnt + w_cnt
+                right_y = y_cnt + h_cnt/2
+        cv2.line(self.img_thres_200, (left_x, left_y), (right_x, right_y), (255), 1)
+
+        contours, _ = cv2.findContours(self.img_thres_200, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        for cnt in contours:
+            hull = cv2.convexHull(cnt)
+            approx = cv2.approxPolyDP(hull, 0.001 * cv2.arcLength(hull, True), True)
+            approx_area = cv2.contourArea(approx)
+            if approx_area < 400:
+                continue
+
+            self.contour_bin = np.zeros(self.img_thres_127.shape, np.uint8)
+            self.contour_led = [approx]
+            cv2.drawContours(self.contour_bin, [approx], 0, (255), -1)
+
+            M = cv2.moments(approx)
+            if M["m00"] == 0:
+                continue
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+            #cv2.circle(self.contour_bin, (cX, cY), 5, (0), -1)
+        self.led_center = (cX, cY)
+        self.img_origin_cleaned = np.bitwise_and(self.contour_bin, self.img_gray)
+
     @staticmethod
     def getCodeFast(img_gray):
         win_w = 3
